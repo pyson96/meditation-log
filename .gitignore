@@ -1,0 +1,65 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# dependencies
+/node_modules
+
+# production
+/dist
+
+# dotenv environment variables
+.env
+.env.*.local
+
+# Vite cache
+/.vite
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode project settings
+.vscode/
+*.code-workspace
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+log.txt
+
+# Optional: OS-specific
+*.swp
+*.swo
+
+# Optional: JetBrains (e.g. WebStorm)
+/.idea/
+
+# Optional: test coverage
+/coverage
+
+# Optional: build output for static deploy
+/.output
