@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import './index.css'
 import dayjs from 'dayjs'
+import { GoogleLogin } from '@react-oauth/google'
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const today = dayjs().format('YYYY-MM-DD')
   const [date, setDate] = useState(today)
   const [formData, setFormData] = useState({
@@ -18,10 +20,37 @@ function App() {
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value })
   }
+  const handleLogin = () => {
+    // Placeholder for OAuth logic
+    // Replace this with your OAuth integration (Google, GitHub, etc.)
+    setIsLoggedIn(true)
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-10 rounded-lg shadow text-center space-y-4">
+          <h1 className="text-3xl font-bold">🧘 Welcome to Meditation Log</h1>
+          <p className="text-gray-600">Sign in with Google to begin</p>
+          
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              console.log(credentialResponse)
+              setIsLoggedIn(true)
+            }}
+            onError={() => {
+              console.log('Login Failed')
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 p-8">
-      {/* Calendar */}
       <div className="flex justify-center mb-8">
         <input
           type="date"
