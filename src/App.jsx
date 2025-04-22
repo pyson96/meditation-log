@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import dayjs from 'dayjs'
 import { GoogleLogin } from '@react-oauth/google'
+import axios from 'axios'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -34,12 +35,27 @@ function App() {
           <p className="text-gray-600">Sign in with Google to begin</p>
           
           <GoogleLogin
-            onSuccess={(credentialResponse) => {
-              console.log(credentialResponse)
-              setIsLoggedIn(true)
+            onSuccess={async (credentialResponse) => {
+              const idToken = credentialResponse.credential // This is the Google ID token
+
+              try {
+                // 🔐 Send the ID token to your backend for verification
+                const res = await axios.post('http://localhost:8000/auth/oauth-login', {
+                  id_token: idToken,
+                })
+
+                const jwt = res.data.access_token
+
+                // 💾 Store JWT for future authenticated API calls
+                localStorage.setItem('access_token', jwt)
+
+                setIsLoggedIn(true)
+              } catch (err) {
+                console.error('❌ Failed to login with backend', err)
+              }
             }}
             onError={() => {
-              console.log('Login Failed')
+              console.error('❌ Google Login Failed')
             }}
           />
         </div>
