@@ -8,23 +8,44 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const today = dayjs().format('YYYY-MM-DD')
   const [date, setDate] = useState(today)
-  const [formData, setFormData] = useState({
-    time: '',
-    location: '',
-    environment: '',
-    type: '',
-    feelings: '',
-    insights: '',
-    extra: '',
-  })
+  const [sections, setSections] = useState([
+    { subtitle: '🕰️ Date & Time', content: '' }
+  ])
 
-  const handleChange = (field) => (e) => {
-    setFormData({ ...formData, [field]: e.target.value })
+  const handleSectionChange = (index, key, value) => {
+    const updated = [...sections]
+    updated[index][key] = value
+    setSections(updated)
   }
-  const handleLogin = () => {
-    // Placeholder for OAuth logic
-    // Replace this with your OAuth integration (Google, GitHub, etc.)
-    setIsLoggedIn(true)
+
+  const handleAddSection = () => {
+    if (sections.length >= 10) return alert('최대 10개까지 작성할 수 있어요!')
+    setSections([...sections, { subtitle: `📝 New Section ${sections.length + 1}`, content: '' }])
+  }
+
+  const handleSave = async () => {
+    const token = localStorage.getItem('access_token')
+    const entry = {
+      date,
+      ...Object.fromEntries(
+        sections.flatMap((s, i) => [
+          [`subtitle_${i + 1}`, s.subtitle],
+          [`content_${i + 1}`, s.content]
+        ])
+      )
+    }
+
+    try {
+      await axios.post('http://localhost:8000/diaries', entry, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      alert('✅ Meditation log saved!')
+    } catch (err) {
+      console.error('❌ Failed to save diary', err)
+      alert('❌ Failed to save. Please try again.')
+    }
   }
 
   if (!isLoggedIn) {
@@ -33,22 +54,15 @@ function App() {
         <div className="bg-white p-10 rounded-lg shadow text-center space-y-4">
           <h1 className="text-3xl font-bold">🧘 Welcome to Meditation Log</h1>
           <p className="text-gray-600">Sign in with Google to begin</p>
-          
+
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
-              const idToken = credentialResponse.credential // This is the Google ID token
-
+              const idToken = credentialResponse.credential
               try {
-                // 🔐 Send the ID token to your backend for verification
                 const res = await axios.post('http://localhost:8000/auth/oauth-login', {
-                  id_token: idToken,
+                  id_token: idToken
                 })
-
-                const jwt = res.data.access_token
-
-                // 💾 Store JWT for future authenticated API calls
-                localStorage.setItem('access_token', jwt)
-
+                localStorage.setItem('access_token', res.data.access_token)
                 setIsLoggedIn(true)
               } catch (err) {
                 console.error('❌ Failed to login with backend', err)
@@ -62,8 +76,6 @@ function App() {
       </div>
     )
   }
-
-
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 p-8">
@@ -82,80 +94,33 @@ function App() {
       </header>
 
       <section className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow space-y-6">
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">🕰️ Date & Time</h2>
-          <input
-            type="datetime-local"
-            className="w-full border rounded p-2 text-sm"
-            value={formData.time}
-            onChange={handleChange('time')}
-          />
-        </div>
+        {sections.map((section, idx) => (
+          <div key={idx}>
+            <h2
+              contentEditable
+              suppressContentEditableWarning
+              className="text-lg font-semibold mb-1"
+              onBlur={(e) => handleSectionChange(idx, 'subtitle', e.target.innerText)}
+            >
+              {section.subtitle}
+            </h2>
+            <textarea
+              className="w-full border rounded p-2 text-sm"
+              rows={3}
+              placeholder={`Enter content for section ${idx + 1}`}
+              value={section.content}
+              onChange={(e) => handleSectionChange(idx, 'content', e.target.value)}
+            />
+          </div>
+        ))}
 
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">📍 Location</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={2}
-            placeholder="Where were you?"
-            value={formData.location}
-            onChange={handleChange('location')}
-          />
-        </div>
-
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">🌿 Environment</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={2}
-            placeholder="Describe your surroundings."
-            value={formData.environment}
-            onChange={handleChange('environment')}
-          />
-        </div>
-
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">🧘 Type of Practice</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={2}
-            placeholder="What kind of meditation did you do?"
-            value={formData.type}
-            onChange={handleChange('type')}
-          />
-        </div>
-
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">💭 Feelings & Perceptions</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={3}
-            placeholder="How did you feel?"
-            value={formData.feelings}
-            onChange={handleChange('feelings')}
-          />
-        </div>
-
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">✨ Insights or Realizations</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={3}
-            placeholder="Any insights from the session?"
-            value={formData.insights}
-            onChange={handleChange('insights')}
-          />
-        </div>
-
-        <div>
-          <h2 contentEditable suppressContentEditableWarning className="text-lg font-semibold mb-1">📝 Additional Notes</h2>
-          <textarea
-            className="w-full border rounded p-2 text-sm"
-            rows={2}
-            placeholder="Anything else you want to note?"
-            value={formData.extra}
-            onChange={handleChange('extra')}
-          />
+        <div className="text-right mt-4">
+          <button
+            onClick={handleAddSection}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm"
+          >
+            + Add Section
+          </button>
         </div>
 
         <div className="mt-6 flex justify-between items-center">
@@ -164,7 +129,10 @@ function App() {
             <option value="public">🌍 Public</option>
           </select>
 
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+          <button
+            onClick={handleSave}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
             Save Log
           </button>
         </div>
