@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './index.css'
 import dayjs from 'dayjs'
 import { GoogleLogin } from '@react-oauth/google'
@@ -48,6 +48,31 @@ function App() {
     }
   }
 
+  const fetchDiary = async (selectedDate) => {
+    const token = localStorage.getItem('access_token')
+    try {
+      const res = await axios.get(`http://localhost:8000/diaries/${selectedDate}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      setDate(selectedDate)
+      const newSections = res.data.subtitles.map((subtitle, i) => ({
+        subtitle,
+        content: res.data.contents[i] || ''
+      })).filter(section => section.subtitle && section.subtitle.trim() !== '')
+      setSections(newSections)
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setDate(selectedDate)
+        setSections([{ subtitle: '🕰️ Date & Time', content: '' }])
+      } else {
+        console.error('❌ Failed to fetch diary', err)
+      }
+    }
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -83,7 +108,7 @@ function App() {
         <input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => fetchDiary(e.target.value)}
           className="border px-3 py-2 rounded shadow-sm"
         />
       </div>
